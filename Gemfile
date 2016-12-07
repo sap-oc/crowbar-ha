@@ -21,6 +21,7 @@ gem "sprockets-standalone", "~> 1.2.1"
 
 group :development do
   gem "closure-compiler", "~> 1.1.10"
+  gem "rake", "< 12.0.0"
   gem "sass", "~> 3.2.19"
   gem "sprockets", "~> 2.11.0"
 end
