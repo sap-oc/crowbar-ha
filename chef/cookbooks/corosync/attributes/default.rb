@@ -20,6 +20,13 @@ default[:corosync][:mcast_addr]   = "239.1.2.3"
 default[:corosync][:mcast_port]   = 5405
 default[:corosync][:members]      = []
 default[:corosync][:transport]    = "udp"
+default[:corosync][:ring_mode]    = "single_ring"
+
+default[:corosync][:second_ring_used] = false
+default[:corosync][:second_ring_bind_addr] = ""
+default[:corosync][:second_ring_mcast_addr] = ""
+default[:corosync][:second_ring_mcast_port] = ""
+default[:corosync][:second_ring_members] = []
 
 case node[:platform_family]
 when "suse"
