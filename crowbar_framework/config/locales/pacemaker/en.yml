@@ -60,6 +60,11 @@ en:
             down or rebooted; you will have to manually start it after having
             fixed the issue. "Automatic" means that this setting will be set to
             "true" for two-nodes cluster, and to "false" otherwise.'
+          ring_mode: 'Ring configuration'
+          ring_modes:
+            single_ring: 'Single ring (only admin network)'
+            dual_ring: 'Dual ring'
+          second_ring_network: 'Network to use as second ring'
         crm:
           no_quorum_policy: 'Policy when cluster does not have quorum'
           no_quorum_policy_hint_html: 'Refer to the <a href="http://clusterlabs.org/doc/en-US/Pacemaker/1.1-crmsh/html/Pacemaker_Explained/_available_cluster_options.html">pacemaker documentation</a> for a description of each value.'
@@ -123,6 +128,10 @@ en:
         drbd: 'Setting up DRBD requires a cluster of two nodes.'
         hae_repo: 'The HAE repositories have not been setup.'
         transport_value: 'Invalid transport value: %{transport}.'
+        ring_mode_value: 'Invalid ring mode: %{ring_mode}.'
+        second_ring_network_value: 'Network not found for setting up second corosync ring: %{second_ring_network}.'
+        second_ring_only_udpu: 'Dual corosync ring is only supported with Unicast (UDPU).'
+        second_ring_network_must_differ_from_admin: 'The second network must not be the admin network'
         quorum_policy: 'Invalid no-quorum-policy value: %{no_quorum_policy}.'
         platform: 'All nodes in proposal must have the same platform.'
         pacemaker_proposal: 'Nodes cannot be part of multiple Pacemaker proposals, but %{other_member} is already part of proposal \"%{p_name}\".'

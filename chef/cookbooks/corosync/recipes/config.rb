@@ -38,6 +38,24 @@ if node[:corosync][:transport] == "udpu" && (node[:corosync][:members].nil? || n
   raise "Members have to be defined when using \"udpu\" transport!"
 end
 
+interfaces = [
+  {
+    bind_addr: node[:corosync][:bind_addr],
+    mcast_addr: node[:corosync][:mcast_addr],
+    mcast_port: node[:corosync][:mcast_port]
+  }
+]
+
+if node[:corosync][:second_ring_used]
+  interfaces += [
+    {
+      bind_addr: node[:corosync][:second_ring_bind_addr],
+      mcast_addr: node[:corosync][:second_ring_mcast_addr],
+      mcast_port: node[:corosync][:second_ring_mcast_port]
+    }
+  ]
+end
+
 template "/etc/corosync/corosync.conf" do
   if node[:platform] == "suse" && node[:platform_version].to_f < 12.0
     source "corosync.conf.erb"
@@ -49,11 +67,12 @@ template "/etc/corosync/corosync.conf" do
   mode 0600
   variables(
     cluster_name: node[:corosync][:cluster_name],
-    bind_addr: node[:corosync][:bind_addr],
-    mcast_addr: node[:corosync][:mcast_addr],
-    mcast_port: node[:corosync][:mcast_port],
+    interfaces: interfaces,
     members: node[:corosync][:members],
-    transport: node[:corosync][:transport]
+    transport: node[:corosync][:transport],
+    fqdn: node[:fqdn],
+    second_ring_used: node[:corosync][:second_ring_used],
+    second_ring_members: node[:corosync][:second_ring_members]
   )
 
   # If the config parameters are changed, it's too risky to just

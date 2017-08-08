@@ -369,6 +369,28 @@ class PacemakerService < ServiceObject
     role.default_attributes["corosync"]["members"] = member_nodes.map{ |n| n.get_network_by_type("admin")["address"] }
     role.default_attributes["corosync"]["transport"] = role.default_attributes["pacemaker"]["corosync"]["transport"]
 
+    # Set up the second ring if dual_ring mode configured
+    ring_mode = role.default_attributes["pacemaker"]["corosync"]["ring_mode"]
+
+    if ring_mode == "dual_ring"
+      second_ring_network = role.default_attributes["pacemaker"]["corosync"]["second_ring_network"]
+      second_ring_net = Chef::DataBag.load("crowbar/#{second_ring_network}_network")
+
+      net_svc = NetworkService.new @logger
+      second_ring_members = member_nodes.map do |member_node|
+        allocated_ip_response = net_svc.allocate_ip "default", second_ring_network, "host", member_node.name
+        allocated_ip_response[1]["address"]
+      end
+
+      role.default_attributes["corosync"]["second_ring_used"] = true
+      role.default_attributes["corosync"]["second_ring_bind_addr"] = second_ring_net["network"]["subnet"]
+      role.default_attributes["corosync"]["second_ring_mcast_addr"] = role.default_attributes["pacemaker"]["corosync"]["mcast_addr"]
+      role.default_attributes["corosync"]["second_ring_mcast_port"] = role.default_attributes["pacemaker"]["corosync"]["mcast_port"]
+      role.default_attributes["corosync"]["second_ring_members"] = second_ring_members
+    else
+      role.default_attributes["corosync"]["second_ring_used"] = false
+    end
+
     role.default_attributes["drbd"] ||= {}
     role.default_attributes["drbd"]["common"] ||= {}
     role.default_attributes["drbd"]["common"]["net"] ||= {}
@@ -624,6 +646,35 @@ class PacemakerService < ServiceObject
         "barclamp.#{bc_name}.validation.transport_value",
         transport: transport
       )
+    end
+
+    ring_mode = proposal["attributes"][@bc_name]["corosync"]["ring_mode"]
+    unless %w(single_ring dual_ring).include?(ring_mode)
+      validation_error I18n.t(
+        "barclamp.#{bc_name}.validation.transport_value",
+        ring_mode: ring_mode
+      )
+    end
+
+    if ring_mode == "dual_ring"
+      unless transport == "udpu"
+        validation_error I18n.t(
+          "barclamp.#{bc_name}.validation.second_ring_only_udpu"
+        )
+      end
+      second_ring_network = proposal["attributes"][@bc_name]["corosync"]["second_ring_network"]
+      if second_ring_network == "admin"
+        validation_error I18n.t(
+          "barclamp.#{bc_name}.validation.second_ring_network_must_differ_from_admin"
+        )
+      end
+      second_ring_net = Chef::DataBag.load("crowbar/#{second_ring_network}_network") rescue nil
+      unless second_ring_net
+        validation_error I18n.t(
+          "barclamp.#{bc_name}.validation.second_ring_network_value",
+          second_ring_network: second_ring_network
+        )
+      end
     end
 
     no_quorum_policy = proposal["attributes"][@bc_name]["crm"]["no_quorum_policy"]

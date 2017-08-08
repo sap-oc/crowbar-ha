@@ -31,6 +31,16 @@ module Barclamp
       )
     end
 
+    def ring_modes_for_corosync(selected)
+      options_for_select(
+        [
+          [t(".corosync.ring_modes.single_ring"), "single_ring"],
+          [t(".corosync.ring_modes.dual_ring"), "dual_ring"]
+        ],
+        selected.to_s
+      )
+    end
+
     def no_quorum_policy_for_pacemaker(selected)
       # no translation for the strings as we simply show the values that will end
       # up in the config file

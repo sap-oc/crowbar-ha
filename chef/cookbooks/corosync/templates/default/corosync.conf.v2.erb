@@ -1,6 +1,6 @@
 # DO NOT EDIT!
 
-# This file is automatically configured via Chef on <%= node["fqdn"] %>
+# This file is automatically configured via Chef on <%= @fqdn %>
 
 # Please read the corosync.conf.5 manual page
 totem {
@@ -44,15 +44,19 @@ totem {
 	# interface: define at least one interface to communicate
 	# over. If you define more than one interface stanza, you must
 	# also set rrp_mode.
+<% if @second_ring_used -%>
+	rrp_mode: passive
+<% end -%>
+<% @interfaces.each.with_index do |interface, ring_index| -%>
 	interface {
 		# Rings must be consecutively numbered, starting at 0.
-		ringnumber: 0
+		ringnumber: <%= ring_index %>
 		# This is normally the *network* address of the
 		# interface to bind to. This ensures that you can use
 		# identical instances of this configuration file
 		# across all your cluster nodes, without having to
 		# modify this option.
-		bindnetaddr: <%= @bind_addr  %>
+		bindnetaddr: <%= interface[:bind_addr]  %>
 		# However, if you have multiple physical network
 		# interfaces configured for the same subnet, then the
 		# network address alone is not sufficient to identify
@@ -67,19 +71,20 @@ totem {
 		# addresses across multiple Corosync clusters sharing
 		# the same network.
 <% if @transport == 'udp' -%>
-		mcastaddr: <%= @mcast_addr %>
+		mcastaddr: <%= interface[:mcast_addr] %>
 <% end -%>
 		# Corosync uses the port you specify here for UDP
 		# messaging, and also the immediately preceding
 		# port. Thus if you set this to 5405, Corosync sends
 		# messages over UDP ports 5405 and 5404.
-		mcastport: <%= @mcast_port %>
+		mcastport: <%= interface[:mcast_port] %>
 		# Time-to-live for cluster communication packets. The
 		# number of hops (routers) that this ring will allow
 		# itself to pass. Note that multicast routing must be
 		# specifically enabled on most network routers.
 		ttl: 1
 	}
+<% end -%>
 
 	transport: <%= @transport %>
 }
@@ -112,9 +117,12 @@ logging {
 
 <% if @transport == 'udpu' -%>
 nodelist {
-  <% @members.sort.each do |memberaddr| -%>
+  <% @members.sort.each.with_index do |memberaddr, member_idx| -%>
 	node {
 		ring0_addr: <%= memberaddr %>
+<% if @second_ring_used -%>
+		ring1_addr: <%= @second_ring_members[member_idx] %>
+<% end -%>
 	}
   <% end -%>
 }

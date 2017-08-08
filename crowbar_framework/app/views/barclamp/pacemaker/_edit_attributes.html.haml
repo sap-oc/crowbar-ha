@@ -5,6 +5,11 @@
   .panel-body
     = select_field %w(corosync transport), :collection => :transport_for_pacemaker
 
+    = select_field %w(corosync ring_mode), :collection => :ring_modes_for_corosync, "data-showit" => "dual_ring", "data-showit-target" => "#dual_ring_container", "data-showit-direct" => "true"
+
+    %div{ :id => "dual_ring_container" }
+      = string_field %w(corosync second_ring_network)
+
     = select_field %w(crm no_quorum_policy), :collection => :no_quorum_policy_for_pacemaker
     %span.help-block
       = t('.crm.no_quorum_policy_hint_html')
